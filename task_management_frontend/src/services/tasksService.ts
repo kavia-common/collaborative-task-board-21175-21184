@@ -41,8 +41,7 @@ export async function createMyTask(title: string): Promise<AppTask | null> {
   const { data: sessionData } = await supabase.auth.getSession();
   const uid = sessionData.session?.user?.id;
   if (!uid) return null;
-  const { data, error } = await supabase
-    .from("tasks", { schema: "app" })
+  const { data, error } = await fromApp<AppTask>("tasks")
     .insert({ user_id: uid, title, status: "todo", priority: "normal" })
     .select("*")
     .single();
@@ -57,8 +56,7 @@ export async function createMyTask(title: string): Promise<AppTask | null> {
 export async function updateMyTaskStatus(id: UUID, status: TaskStatus): Promise<AppTask | null> {
   /** Update a task status (todo, in_progress, done) for the current user in app.tasks. */
   if (!isSupabaseConfigured()) return null;
-  const { data, error } = await supabase
-    .from("tasks", { schema: "app" })
+  const { data, error } = await fromApp<AppTask>("tasks")
     .update({ status })
     .eq("id", id)
     .select("*")

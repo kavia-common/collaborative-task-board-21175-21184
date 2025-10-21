@@ -3,12 +3,13 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import { applyCssVariables } from "./theme";
 import App from "./App";
+import { getSupabaseVersion } from "./supabaseClient";
 
 applyCssVariables();
 
-// Small runtime health check: clarify schema usage in console so issues are easy to spot
+// Small runtime health check: clarify schema usage and supabase-js version in console so issues are easy to spot
 // eslint-disable-next-line no-console
-console.info("[App] Using Supabase with tasks in schema 'app'. Realtime filters set to schema='app' for tasks.");
+console.info(`[App] Supabase-js version: ${getSupabaseVersion()}. Using schema 'app' for tasks. Realtime filters set to schema='app' for tasks.`);
 
 const rootEl = document.getElementById("root") as HTMLElement | null;
 if (!rootEl) {

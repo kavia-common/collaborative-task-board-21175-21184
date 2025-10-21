@@ -33,7 +33,11 @@ export default function TasksList(): JSX.Element {
       setTasks(data);
     } catch (e: any) {
       const msg = e?.message ?? "Failed to load tasks";
-      setError(msg.includes("public.app.tasks") ? `${msg} — Hint: Ensure queries target schema 'app' via from('tasks', { schema: 'app' }).` : msg);
+      setError(
+        msg.includes("public.app.tasks") || msg.includes("relation \"public.tasks\" does not exist")
+          ? `${msg} — Hint: Currently using schema 'app'. Ensure queries use fromApp('tasks') or supabase.schema('app').from('tasks').`
+          : msg
+      );
     } finally {
       setLoading(false);
     }
@@ -60,7 +64,11 @@ export default function TasksList(): JSX.Element {
     } catch (e: any) {
       {
         const msg = e?.message ?? "Failed to create task";
-        setError(msg.includes("public.app.tasks") ? `${msg} — Hint: Ensure queries target schema 'app'.` : msg);
+        setError(
+          msg.includes("public.app.tasks") || msg.includes("relation \"public.tasks\" does not exist")
+            ? `${msg} — Hint: Using schema 'app'. Ensure create uses fromApp('tasks') with user_id = auth.uid().`
+            : msg
+        );
       }
     } finally {
       setAdding(false);
@@ -75,7 +83,11 @@ export default function TasksList(): JSX.Element {
     } catch (e: any) {
       {
         const msg = e?.message ?? "Failed to update status";
-        setError(msg.includes("public.app.tasks") ? `${msg} — Hint: Ensure queries target schema 'app'.` : msg);
+        setError(
+          msg.includes("public.app.tasks") || msg.includes("relation \"public.tasks\" does not exist")
+            ? `${msg} — Hint: Using schema 'app'. Ensure updates use fromApp('tasks').`
+            : msg
+        );
       }
       // Revert by reload for safety
       load();
@@ -91,7 +103,11 @@ export default function TasksList(): JSX.Element {
     } catch (e: any) {
       {
         const msg = e?.message ?? "Failed to delete task";
-        setError(msg.includes("public.app.tasks") ? `${msg} — Hint: Ensure queries target schema 'app'.` : msg);
+        setError(
+          msg.includes("public.app.tasks") || msg.includes("relation \"public.tasks\" does not exist")
+            ? `${msg} — Hint: Using schema 'app'. Ensure deletions use fromApp('tasks').`
+            : msg
+        );
       }
       setTasks(prev);
     }

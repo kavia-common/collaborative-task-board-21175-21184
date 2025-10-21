@@ -13,13 +13,14 @@ interface RealtimeOptions<T> {
 export function useRealtimeBoard(onChange: Handler<any>): void {
   /**
    * Subscribes to 'columns' (public) and 'tasks' in 'app' schema for INSERT/UPDATE/DELETE changes and emits payloads via onChange.
+   * Uses explicit schema-qualified filters to avoid 'public.tasks' cache/lookup errors.
    */
   useEffect(() => {
     if (!isSupabaseConfigured()) return;
 
     // Log once when subscribing to help diagnose schema filters
     // eslint-disable-next-line no-console
-    console.info("[Realtime] Subscribing to public.columns and app.tasks postgres_changes");
+    console.info("[Realtime] Subscribing to postgres_changes with filters: public.columns, app.tasks");
     const channel = supabase
       .channel("board-realtime")
       .on(
