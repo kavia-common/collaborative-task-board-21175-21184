@@ -14,7 +14,7 @@ export default function TaskModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
-  /** Modal dialog to edit an existing task. */
+  /** Modal dialog to edit an existing task (mutations via RPC). */
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description ?? "");
   const [assignee, setAssignee] = useState<UUID | "">((task.assignee_id as UUID) ?? "");
@@ -42,9 +42,9 @@ export default function TaskModal({
       });
       onSaved();
       onClose();
-    } catch (e) {
+    } catch (e: any) {
       // eslint-disable-next-line no-console
-      console.error(e);
+      console.error("[TaskModal] Save failed via rpc tasks_update:", e?.message ?? e);
     } finally {
       setSaving(false);
     }

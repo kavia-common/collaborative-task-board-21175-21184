@@ -1,10 +1,10 @@
-import { supabase, isSupabaseConfigured, fromApp } from "../supabaseClient";
+import { supabase, isSupabaseConfigured } from "../supabaseClient";
 import type { BoardData, Column, Task, UUID } from "../types";
 
 // PUBLIC_INTERFACE
 export async function fetchBoard(): Promise<BoardData> {
   /**
-   * Fetches board columns, tasks (from app.tasks), and team members.
+   * Fetches board columns, tasks (from public.tasks view), and team members.
    * Returns empty arrays if Supabase is not configured.
    */
   if (!isSupabaseConfigured()) {
@@ -14,8 +14,7 @@ export async function fetchBoard(): Promise<BoardData> {
   const [{ data: columns, error: cErr }, { data: tasks, error: tErr }, { data: members, error: mErr }] =
     await Promise.all([
       supabase.from("columns").select("*").order("position", { ascending: true }),
-      // Explicitly use app schema for tasks
-      fromApp<Task>("tasks").select("*").order("position", { ascending: true }),
+      supabase.from("tasks").select("*").order("position", { ascending: true }),
       supabase.from("profiles").select("id, email, full_name, avatar_url"),
     ]);
 
@@ -24,7 +23,7 @@ export async function fetchBoard(): Promise<BoardData> {
     throw cErr;
   }
   if (tErr) {
-    tErr.message = `${tErr.message} (while selecting from app.tasks)`;
+    tErr.message = `${tErr.message} (while selecting from public.tasks view)`;
     throw tErr;
   }
   if (mErr) {
@@ -41,48 +40,71 @@ export async function fetchBoard(): Promise<BoardData> {
 
 // PUBLIC_INTERFACE
 export async function createTask(partial: Partial<Task>): Promise<Task | null> {
-  /** Creates a task with provided fields in app.tasks. Ensures user_id is set for RLS where applicable. */
+  /**
+   * Creates a task via RPC tasks_insert.
+   * Do not set user_id in client; handled server-side via auth.uid().
+   */
   if (!isSupabaseConfigured()) return null;
-  // Attach user_id if present in auth session and not provided in partial
-  const { data: sessionData } = await (supabase as any).auth.getSession();
-  const uid = sessionData?.session?.user?.id;
-  const payload = { ...(partial as any) };
-  if (uid && payload.user_id === undefined) {
-    payload.user_id = uid;
-  }
-  const { data, error } = await fromApp<Task>("tasks").insert(payload).select("*").single();
+  const { data, error } = await supabase.rpc("tasks_insert", {
+    _title: partial.title ?? "",
+    _description: partial.description ?? null,
+    _status: (partial as any).status ?? "todo",
+    _priority: (partial as any).priority ?? "medium",
+    _due_date: partial.due_date ?? null,
+  });
   if (error) {
-    error.message = `${error.message} (createTask on app.tasks)`;
+    error.message = `${error.message} (rpc tasks_insert)`;
     throw error;
   }
-  return data as Task;
+  const row = Array.isArray(data) ? data[0] : data;
+  return (row ?? null) as Task | null;
 }
 
 // PUBLIC_INTERFACE
 export async function updateTask(id: UUID, updates: Partial<Task>): Promise<Task | null> {
-  /** Updates a task by id in app.tasks. */
+  /**
+   * Updates a task via RPC tasks_update.
+   */
   if (!isSupabaseConfigured()) return null;
-  const { data, error } = await fromApp<Task>("tasks")
-    .update(updates)
-    .eq("id", id)
-    .select("*")
-    .single();
+  const { data, error } = await supabase.rpc("tasks_update", {
+    _id: id,
+    _title: updates.title ?? null,
+    _description: updates.description ?? null,
+    _status: (updates as any).status ?? null,
+    _priority: (updates as any).priority ?? null,
+    _due_date: updates.due_date ?? null,
+  });
   if (error) {
-    error.message = `${error.message} (updateTask on app.tasks)`;
+    error.message = `${error.message} (rpc tasks_update)`;
     throw error;
   }
-  return data as Task;
+  const row = Array.isArray(data) ? data[0] : data;
+  return (row ?? null) as Task | null;
 }
 
 // PUBLIC_INTERFACE
 export async function moveTask(taskId: UUID, toColumnId: UUID, toPosition: number): Promise<void> {
-  /** Moves a task to a target column and position in app.tasks. */
+  /**
+   * Moves a task by updating its column and position using RPC tasks_update.
+   * Only fields provided are updated; others remain unchanged server-side.
+   */
   if (!isSupabaseConfigured()) return;
-  const { error } = await fromApp<Task>("tasks")
-    .update({ column_id: toColumnId, position: toPosition })
-    .eq("id", taskId);
+  const { error } = await supabase.rpc("tasks_update", {
+    _id: taskId,
+    _title: null,
+    _description: null,
+    _status: null,
+    _priority: null,
+    _due_date: null,
+    // If your RPC supports column/position updates, include them here. If not, adjust SQL accordingly.
+    // For compatibility, we leverage tasks_update to handle these fields as well.
+    // @ts-ignore - extra keys passed intentionally to RPC; server will accept if defined.
+    _column_id: toColumnId,
+    // @ts-ignore
+    _position: toPosition,
+  });
   if (error) {
-    error.message = `${error.message} (moveTask on app.tasks)`;
+    error.message = `${error.message} (rpc tasks_update move)`;
     throw error;
   }
 }

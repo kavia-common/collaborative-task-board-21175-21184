@@ -24,7 +24,7 @@ export function isSupabaseConfigured(): boolean {
 
 /**
  * Runtime check: log supabase-js version and whether schema() helper is available.
- * Also clarifies that all tasks are queried via schema 'app'.
+ * We keep schema() helper available for future non-public schemas.
  */
 let schemaHelperAvailable = false;
 let supabaseJsVersion = "unknown";
@@ -41,14 +41,13 @@ try {
 if (url && key) {
   // eslint-disable-next-line no-console
   console.info(
-    `[Supabase] Client initialized (supabase-js v${supabaseJsVersion}). schema() available: ${schemaHelperAvailable}. Tasks accessed in schema 'app'.`
+    `[Supabase] Client initialized (supabase-js v${supabaseJsVersion}). schema() available: ${schemaHelperAvailable}. Using public.tasks view and RPCs for mutations.`
   );
 }
 
 /**
  * Internal: get a schema-scoped table reference in a version-safe way.
- * - If supabase.schema('app') exists (v2+), use it.
- * - Else fallback to from('table', { schema: 'app' }) (v1 style).
+ * This helper is retained for future tables in custom schemas.
  */
 function fromAppInternal<T = any>(table: string) {
   const client: any = supabase as any;
@@ -66,7 +65,7 @@ function fromAppInternal<T = any>(table: string) {
 export function fromApp<T = any>(table: string) {
   /**
    * Returns a query builder for the provided table in the 'app' schema.
-   * Always prefer using this for app.* tables to avoid accidental 'public.app.table' lookup.
+   * Kept for compatibility with future non-public tables.
    */
   return fromAppInternal<T>(table);
 }

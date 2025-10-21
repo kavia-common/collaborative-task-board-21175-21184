@@ -7,9 +7,9 @@ import { getSupabaseVersion } from "./supabaseClient";
 
 applyCssVariables();
 
-// Small runtime health check: clarify schema usage and supabase-js version in console so issues are easy to spot
+// Small runtime health check
 // eslint-disable-next-line no-console
-console.info(`[App] Supabase-js version: ${getSupabaseVersion()}. Using schema 'app' for tasks. Realtime filters set to schema='app' for tasks.`);
+console.info(`[App] Supabase-js version: ${getSupabaseVersion()}. Reading from public.tasks view; using RPCs tasks_insert/tasks_update/tasks_delete for mutations.`);
 
 const rootEl = document.getElementById("root") as HTMLElement | null;
 if (!rootEl) {

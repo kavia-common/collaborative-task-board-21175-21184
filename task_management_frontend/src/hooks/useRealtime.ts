@@ -12,15 +12,15 @@ interface RealtimeOptions<T> {
 // PUBLIC_INTERFACE
 export function useRealtimeBoard(onChange: Handler<any>): void {
   /**
-   * Subscribes to 'columns' (public) and 'tasks' in 'app' schema for INSERT/UPDATE/DELETE changes and emits payloads via onChange.
-   * Uses explicit schema-qualified filters to avoid 'public.tasks' cache/lookup errors.
+   * Subscribes to 'columns' (public) and 'tasks' (public view) for INSERT/UPDATE/DELETE.
+   * Note: Postgres Realtime on views may not emit events. If your project doesn't emit on public.tasks view,
+   * consider switching to a channel on the underlying base table or RPC NOTIFY in the DB layer.
    */
   useEffect(() => {
     if (!isSupabaseConfigured()) return;
 
-    // Log once when subscribing to help diagnose schema filters
     // eslint-disable-next-line no-console
-    console.info("[Realtime] Subscribing to postgres_changes with filters: public.columns, app.tasks");
+    console.info("[Realtime] Subscribing to Postgres changes on public.columns and public.tasks (view)");
     const channel = supabase
       .channel("board-realtime")
       .on(
@@ -30,7 +30,7 @@ export function useRealtimeBoard(onChange: Handler<any>): void {
       )
       .on(
         "postgres_changes",
-        { event: "*", schema: "app", table: "tasks" },
+        { event: "*", schema: "public", table: "tasks" },
         (payload: any) => onChange({ kind: "tasks", payload }),
       )
       .subscribe();

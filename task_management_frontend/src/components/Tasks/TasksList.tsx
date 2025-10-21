@@ -12,7 +12,7 @@ import {
 /* eslint-disable no-useless-escape */
 // PUBLIC_INTERFACE
 export default function TasksList(): JSX.Element {
-  /** Renders the signed-in user's tasks from the app.tasks table with quick add, status update, and delete. */
+  /** Renders the signed-in user's tasks from the public.tasks view with quick add (RPC), status update (RPC), and delete (RPC). */
   const configured = isSupabaseConfigured();
   const [tasks, setTasks] = useState<AppTask[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -33,11 +33,7 @@ export default function TasksList(): JSX.Element {
       setTasks(data);
     } catch (e: any) {
       const msg = e?.message ?? "Failed to load tasks";
-      setError(
-        msg.includes("public.app.tasks") || msg.includes("relation \"public.tasks\" does not exist")
-          ? `${msg} — Hint: Currently using schema 'app'. Ensure queries use fromApp('tasks') or supabase.schema('app').from('tasks').`
-          : msg
-      );
+      setError(`${msg} — Using public.tasks view and RPC functions`);
     } finally {
       setLoading(false);
     }
@@ -62,14 +58,8 @@ export default function TasksList(): JSX.Element {
         setTasks((prev) => [created, ...prev]);
       }
     } catch (e: any) {
-      {
-        const msg = e?.message ?? "Failed to create task";
-        setError(
-          msg.includes("public.app.tasks") || msg.includes("relation \"public.tasks\" does not exist")
-            ? `${msg} — Hint: Using schema 'app'. Ensure create uses fromApp('tasks') with user_id = auth.uid().`
-            : msg
-        );
-      }
+      const msg = e?.message ?? "Failed to create task";
+      setError(`${msg} — via rpc('tasks_insert')`);
     } finally {
       setAdding(false);
     }
@@ -81,14 +71,8 @@ export default function TasksList(): JSX.Element {
       setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, status } : t)));
       await updateMyTaskStatus(task.id, status);
     } catch (e: any) {
-      {
-        const msg = e?.message ?? "Failed to update status";
-        setError(
-          msg.includes("public.app.tasks") || msg.includes("relation \"public.tasks\" does not exist")
-            ? `${msg} — Hint: Using schema 'app'. Ensure updates use fromApp('tasks').`
-            : msg
-        );
-      }
+      const msg = e?.message ?? "Failed to update status";
+      setError(`${msg} — via rpc('tasks_update')`);
       // Revert by reload for safety
       load();
     }
@@ -101,14 +85,8 @@ export default function TasksList(): JSX.Element {
       setTasks((p) => p.filter((t) => t.id !== task.id));
       await deleteMyTask(task.id);
     } catch (e: any) {
-      {
-        const msg = e?.message ?? "Failed to delete task";
-        setError(
-          msg.includes("public.app.tasks") || msg.includes("relation \"public.tasks\" does not exist")
-            ? `${msg} — Hint: Using schema 'app'. Ensure deletions use fromApp('tasks').`
-            : msg
-        );
-      }
+      const msg = e?.message ?? "Failed to delete task";
+      setError(`${msg} — via rpc('tasks_delete')`);
       setTasks(prev);
     }
   };
