@@ -8,11 +8,13 @@ import { fetchBoard, createColumn } from "./services/boardService";
 import { useRealtimeBoard } from "./hooks/useRealtime";
 import type { BoardData, Task } from "./types";
 import { isSupabaseConfigured } from "./supabaseClient";
+import SignIn from "./components/Auth/SignIn";
+import Dashboard from "./pages/Dashboard";
 
 // PUBLIC_INTERFACE
 export default function App(): JSX.Element {
   /** Root application shell and state management for the Kanban board. */
-  const { user, loading: authLoading, error: authError, signIn, signUp, signOut, configured } = useAuth();
+  const { user, loading: authLoading, error: authError, signOut, configured } = useAuth();
 
   const [board, setBoard] = useState<BoardData>({ columns: [], tasks: [], members: [] });
   const [loading, setLoading] = useState<boolean>(true);
@@ -86,7 +88,7 @@ export default function App(): JSX.Element {
     return (
       <div className="app-shell">
         <header className="app-header">
-          <div style={{ fontWeight: 700, color: "var(--color-primary)" }}>Task Board</div>
+          <div style={{ fontWeight: 700, color: "var(--color-primary)" }}>Kavia AI Task Management System</div>
         </header>
         <aside className="app-sidebar">
           <div className="state">Supabase is not configured. Set REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_KEY.</div>
@@ -103,9 +105,7 @@ export default function App(): JSX.Element {
   }
 
   if (!user) {
-    return (
-      <AuthScreen signIn={signIn} signUp={signUp} error={authError} />
-    );
+    return <SignIn title="Kavia AI Task Management System" />;
   }
 
   return (
@@ -120,57 +120,15 @@ export default function App(): JSX.Element {
         {loading ? (
           <div className="state">Loading board...</div>
         ) : emptyState ? (
-          <div className="state">{emptyState}</div>
+          <>
+            <Dashboard email={user?.email} onSignOut={signOut} />
+            <div className="state">{emptyState}</div>
+          </>
         ) : (
           <Board data={board} onOpenTask={onOpenTask} onReload={load} />
         )}
       </main>
       {modalTask && <TaskModal task={modalTask} members={board.members} onClose={onCloseModal} onSaved={load} />}
-    </div>
-  );
-}
-
-function AuthScreen({
-  signIn,
-  signUp,
-  error,
-}: {
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
-  error: string | null;
-}) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [mode, setMode] = useState<"in" | "up">("in");
-
-  return (
-    <div style={{ display: "grid", placeItems: "center", height: "100vh", background: "var(--color-surface)" }}>
-      <div className="modal" style={{ width: 420 }}>
-        <div className="modal-header">
-          <div className="modal-title">{mode === "in" ? "Sign In" : "Create account"}</div>
-          <button className="btn ghost" onClick={() => setMode((m) => (m === "in" ? "up" : "in"))}>
-            {mode === "in" ? "Need an account?" : "Have an account?"}
-          </button>
-        </div>
-        <div className="form-grid">
-          <div className="full">
-            <label className="helper">Email</label>
-            <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-          </div>
-          <div className="full">
-            <label className="helper">Password</label>
-            <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-          </div>
-        </div>
-        {error && <div className="helper" style={{ color: "var(--color-error)", marginTop: 8 }}>{error}</div>}
-        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
-          {mode === "in" ? (
-            <button className="btn primary" onClick={() => signIn(email, password)}>Sign In</button>
-          ) : (
-            <button className="btn primary" onClick={() => signUp(email, password)}>Sign Up</button>
-          )}
-        </div>
-      </div>
     </div>
   );
 }

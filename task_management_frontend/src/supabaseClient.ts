@@ -10,6 +10,10 @@ if (!url || !key) {
   );
 }
 
+/**
+ * Supabase JS client instance. Uses REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_KEY
+ * provided via environment. Do not hardcode credentials.
+ */
 export const supabase = url && key ? createClient(url, key) : (null as any);
 
 // PUBLIC_INTERFACE

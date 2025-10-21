@@ -154,6 +154,13 @@ main.app-main{
   border:1px dashed #E5E7EB;border-radius:12px;padding:24px;text-align:center;color:#6B7280;background:#fff
 }
 
+/* Auth */
+.auth-card .btn.ghost { color: var(--color-primary); }
+.auth-card .btn.ghost:hover { background: #F3F4F6; }
+.auth-card input.input, .auth-card .input {
+  height: 40px;
+}
+
 /* Team members */
 .members{display:flex;flex-direction:column;gap:8px}
 .member{display:flex;align-items:center;gap:8px}

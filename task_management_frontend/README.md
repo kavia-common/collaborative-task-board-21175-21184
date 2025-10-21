@@ -2,6 +2,8 @@
 
 A minimalist Ocean Professional themed Kanban board built with React + TypeScript, using Supabase for authentication, data, and real-time updates.
 
+App title: "Kavia AI Task Management System"
+
 ## Tech
 - React 18 + TypeScript
 - Supabase (Auth, Postgres, Realtime)
@@ -31,6 +33,21 @@ Optional: Type checks
 ```
 npm run typecheck
 ```
+
+## Authentication
+The app includes a centered, minimalist sign-in screen:
+- Email/password Sign In and Sign Up (with inline errors and loading states)
+- "Continue with Google" button placeholder (works if Google provider is configured in Supabase; otherwise shows a friendly tip)
+- After successful auth, a simple dashboard greets the user and the main board UI is accessible.
+- The app listens to auth state changes and conditionally renders the Auth screen vs content.
+
+Environment:
+- REACT_APP_SUPABASE_URL
+- REACT_APP_SUPABASE_KEY
+
+Google OAuth:
+- Configure in Supabase Project Settings > Authentication > Providers > Google.
+- Set authorized redirect URI to your dev/prod URL (we use window.location.origin during local dev).
 
 ## Database Schema (SQL)
 Run in Supabase SQL editor:
