@@ -9,9 +9,10 @@ import {
   TaskStatus,
 } from "../../services/tasksService";
 
+/* eslint-disable no-useless-escape */
 // PUBLIC_INTERFACE
 export default function TasksList(): JSX.Element {
-  /** Renders the signed-in user's tasks from app.tasks with quick add, status update, and delete. */
+  /** Renders the signed-in user's tasks from the app.tasks table with quick add, status update, and delete. */
   const configured = isSupabaseConfigured();
   const [tasks, setTasks] = useState<AppTask[]>([]);
   const [loading, setLoading] = useState<boolean>(true);

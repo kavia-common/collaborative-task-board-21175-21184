@@ -18,54 +18,67 @@ export interface AppTask {
 
 // PUBLIC_INTERFACE
 export async function fetchMyTasks(): Promise<AppTask[]> {
-  /** Fetch tasks for the currently authenticated user (RLS enforces user_id = auth.uid()). */
+  /** Fetch tasks for the currently authenticated user (RLS enforces user_id = auth.uid()) from app.tasks. */
   if (!isSupabaseConfigured()) return [];
   const { data: sessionData } = await supabase.auth.getSession();
   const uid = sessionData.session?.user?.id;
   if (!uid) return [];
   const { data, error } = await supabase
-    .from("tasks")
+    .from("app.tasks")
     .select("*")
     .eq("user_id", uid)
     .order("created_at", { ascending: false });
-  if (error) throw error;
+  if (error) {
+    // Enhance error message to clarify schema expectations
+    error.message = `${error.message} (while selecting from app.tasks)`;
+    throw error;
+  }
   return (data || []) as AppTask[];
 }
 
 // PUBLIC_INTERFACE
 export async function createMyTask(title: string): Promise<AppTask | null> {
-  /** Create a task for the current user with a default status=todo and priority=normal. */
+  /** Create a task for the current user with a default status=todo and priority=normal in app.tasks. */
   if (!isSupabaseConfigured()) return null;
   const { data: sessionData } = await supabase.auth.getSession();
   const uid = sessionData.session?.user?.id;
   if (!uid) return null;
   const { data, error } = await supabase
-    .from("tasks")
+    .from("app.tasks")
     .insert({ user_id: uid, title, status: "todo", priority: "normal" })
     .select("*")
     .single();
-  if (error) throw error;
+  if (error) {
+    error.message = `${error.message} (while inserting into app.tasks)`;
+    throw error;
+  }
   return data as AppTask;
 }
 
 // PUBLIC_INTERFACE
 export async function updateMyTaskStatus(id: UUID, status: TaskStatus): Promise<AppTask | null> {
-  /** Update a task status (todo, in_progress, done) for the current user. */
+  /** Update a task status (todo, in_progress, done) for the current user in app.tasks. */
   if (!isSupabaseConfigured()) return null;
   const { data, error } = await supabase
-    .from("tasks")
+    .from("app.tasks")
     .update({ status })
     .eq("id", id)
     .select("*")
     .single();
-  if (error) throw error;
+  if (error) {
+    error.message = `${error.message} (while updating app.tasks)`;
+    throw error;
+  }
   return data as AppTask;
 }
 
 // PUBLIC_INTERFACE
 export async function deleteMyTask(id: UUID): Promise<void> {
-  /** Delete a task for the current user. */
+  /** Delete a task for the current user from app.tasks. */
   if (!isSupabaseConfigured()) return;
-  const { error } = await supabase.from("tasks").delete().eq("id", id);
-  if (error) throw error;
+  const { error } = await supabase.from("app.tasks").delete().eq("id", id);
+  if (error) {
+    error.message = `${error.message} (while deleting from app.tasks)`;
+    throw error;
+  }
 }

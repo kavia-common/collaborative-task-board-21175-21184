@@ -12,7 +12,7 @@ interface RealtimeOptions<T> {
 // PUBLIC_INTERFACE
 export function useRealtimeBoard(onChange: Handler<any>): void {
   /**
-   * Subscribes to 'columns' and 'tasks' for INSERT/UPDATE/DELETE changes and emits payloads via onChange.
+   * Subscribes to 'columns' (public) and 'tasks' in 'app' schema for INSERT/UPDATE/DELETE changes and emits payloads via onChange.
    */
   useEffect(() => {
     if (!isSupabaseConfigured()) return;
@@ -26,7 +26,7 @@ export function useRealtimeBoard(onChange: Handler<any>): void {
       )
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "tasks" },
+        { event: "*", schema: "app", table: "tasks" },
         (payload: any) => onChange({ kind: "tasks", payload }),
       )
       .subscribe();
