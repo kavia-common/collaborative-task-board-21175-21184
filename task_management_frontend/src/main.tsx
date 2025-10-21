@@ -6,6 +6,10 @@ import App from "./App";
 
 applyCssVariables();
 
+// Small runtime health check: clarify schema usage in console so issues are easy to spot
+// eslint-disable-next-line no-console
+console.info("[App] Using Supabase with tasks in schema 'app'. Realtime filters set to schema='app' for tasks.");
+
 const rootEl = document.getElementById("root") as HTMLElement | null;
 if (!rootEl) {
   // eslint-disable-next-line no-console

@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured } from "../supabaseClient";
+import { supabase, isSupabaseConfigured, fromApp } from "../supabaseClient";
 import type { BoardData, Column, Task, UUID } from "../types";
 
 // PUBLIC_INTERFACE
@@ -14,7 +14,8 @@ export async function fetchBoard(): Promise<BoardData> {
   const [{ data: columns, error: cErr }, { data: tasks, error: tErr }, { data: members, error: mErr }] =
     await Promise.all([
       supabase.from("columns").select("*").order("position", { ascending: true }),
-      supabase.from("app.tasks").select("*").order("position", { ascending: true }),
+      // Explicitly use app schema for tasks
+      fromApp<Task>("tasks").select("*").order("position", { ascending: true }),
       supabase.from("profiles").select("id, email, full_name, avatar_url"),
     ]);
 
@@ -33,8 +34,11 @@ export async function fetchBoard(): Promise<BoardData> {
 export async function createTask(partial: Partial<Task>): Promise<Task | null> {
   /** Creates a task with provided fields in app.tasks. */
   if (!isSupabaseConfigured()) return null;
-  const { data, error } = await supabase.from("app.tasks").insert(partial).select("*").single();
-  if (error) throw error;
+  const { data, error } = await fromApp<Task>("tasks").insert(partial).select("*").single();
+  if (error) {
+    error.message = `${error.message} (createTask on app.tasks)`;
+    throw error;
+  }
   return data as Task;
 }
 
@@ -42,8 +46,15 @@ export async function createTask(partial: Partial<Task>): Promise<Task | null> {
 export async function updateTask(id: UUID, updates: Partial<Task>): Promise<Task | null> {
   /** Updates a task by id in app.tasks. */
   if (!isSupabaseConfigured()) return null;
-  const { data, error } = await supabase.from("app.tasks").update(updates).eq("id", id).select("*").single();
-  if (error) throw error;
+  const { data, error } = await fromApp<Task>("tasks")
+    .update(updates)
+    .eq("id", id)
+    .select("*")
+    .single();
+  if (error) {
+    error.message = `${error.message} (updateTask on app.tasks)`;
+    throw error;
+  }
   return data as Task;
 }
 
@@ -51,11 +62,13 @@ export async function updateTask(id: UUID, updates: Partial<Task>): Promise<Task
 export async function moveTask(taskId: UUID, toColumnId: UUID, toPosition: number): Promise<void> {
   /** Moves a task to a target column and position in app.tasks. */
   if (!isSupabaseConfigured()) return;
-  const { error } = await supabase
-    .from("app.tasks")
+  const { error } = await fromApp<Task>("tasks")
     .update({ column_id: toColumnId, position: toPosition })
     .eq("id", taskId);
-  if (error) throw error;
+  if (error) {
+    error.message = `${error.message} (moveTask on app.tasks)`;
+    throw error;
+  }
 }
 
 // PUBLIC_INTERFACE

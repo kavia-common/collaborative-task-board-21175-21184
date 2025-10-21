@@ -17,6 +17,9 @@ export function useRealtimeBoard(onChange: Handler<any>): void {
   useEffect(() => {
     if (!isSupabaseConfigured()) return;
 
+    // Log once when subscribing to help diagnose schema filters
+    // eslint-disable-next-line no-console
+    console.info("[Realtime] Subscribing to public.columns and app.tasks postgres_changes");
     const channel = supabase
       .channel("board-realtime")
       .on(

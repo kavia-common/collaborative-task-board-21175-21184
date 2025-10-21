@@ -32,7 +32,8 @@ export default function TasksList(): JSX.Element {
       const data = await fetchMyTasks();
       setTasks(data);
     } catch (e: any) {
-      setError(e?.message ?? "Failed to load tasks");
+      const msg = e?.message ?? "Failed to load tasks";
+      setError(msg.includes("public.app.tasks") ? `${msg} — Hint: Ensure queries target schema 'app' via from('tasks', { schema: 'app' }).` : msg);
     } finally {
       setLoading(false);
     }
@@ -57,7 +58,10 @@ export default function TasksList(): JSX.Element {
         setTasks((prev) => [created, ...prev]);
       }
     } catch (e: any) {
-      setError(e?.message ?? "Failed to create task");
+      {
+        const msg = e?.message ?? "Failed to create task";
+        setError(msg.includes("public.app.tasks") ? `${msg} — Hint: Ensure queries target schema 'app'.` : msg);
+      }
     } finally {
       setAdding(false);
     }
@@ -69,7 +73,10 @@ export default function TasksList(): JSX.Element {
       setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, status } : t)));
       await updateMyTaskStatus(task.id, status);
     } catch (e: any) {
-      setError(e?.message ?? "Failed to update status");
+      {
+        const msg = e?.message ?? "Failed to update status";
+        setError(msg.includes("public.app.tasks") ? `${msg} — Hint: Ensure queries target schema 'app'.` : msg);
+      }
       // Revert by reload for safety
       load();
     }
@@ -82,7 +89,10 @@ export default function TasksList(): JSX.Element {
       setTasks((p) => p.filter((t) => t.id !== task.id));
       await deleteMyTask(task.id);
     } catch (e: any) {
-      setError(e?.message ?? "Failed to delete task");
+      {
+        const msg = e?.message ?? "Failed to delete task";
+        setError(msg.includes("public.app.tasks") ? `${msg} — Hint: Ensure queries target schema 'app'.` : msg);
+      }
       setTasks(prev);
     }
   };
