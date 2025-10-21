@@ -23,6 +23,10 @@ npm run start
 ```
 Open http://localhost:3000
 
+Troubleshooting:
+- If npm install fails with a peer dependency error related to react-scripts and TypeScript, ensure TypeScript is pinned to ^4.9 (package.json already set to 4.9.5).
+- Ensure you have a `.env` file based on `.env.example`. Without Supabase vars the app still starts but in a disabled state.
+
 Optional: Type checks
 ```
 npm run typecheck

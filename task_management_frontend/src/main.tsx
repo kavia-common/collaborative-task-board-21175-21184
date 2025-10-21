@@ -6,9 +6,15 @@ import App from "./App";
 
 applyCssVariables();
 
-const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+const rootEl = document.getElementById("root") as HTMLElement | null;
+if (!rootEl) {
+  // eslint-disable-next-line no-console
+  console.error("Root element #root not found. Ensure public/index.html contains a <div id=\"root\"></div>.");
+} else {
+  const root = ReactDOM.createRoot(rootEl);
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
+}
