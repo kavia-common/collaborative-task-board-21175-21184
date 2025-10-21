@@ -1,82 +1,101 @@
-# Lightweight React Template for KAVIA
+# Collaborative Task Board (Frontend)
 
-This project provides a minimal React template with a clean, modern UI and minimal dependencies.
+A minimalist Ocean Professional themed Kanban board built with React + TypeScript, using Supabase for authentication, data, and real-time updates.
 
-## Features
+## Tech
+- React 18 + TypeScript
+- Supabase (Auth, Postgres, Realtime)
+- @hello-pangea/dnd (drag-and-drop)
+- Minimal custom CSS (no UI framework)
 
-- **Lightweight**: No heavy UI frameworks - uses only vanilla CSS and React
-- **Modern UI**: Clean, responsive design with KAVIA brand styling
-- **Fast**: Minimal dependencies for quick loading times
-- **Simple**: Easy to understand and modify
+## Environment
+Create `.env` at project root with:
+```
+REACT_APP_SUPABASE_URL=your_supabase_project_url
+REACT_APP_SUPABASE_KEY=your_supabase_anon_key
+```
+These variables are required at runtime. They are not hard-coded.
 
-## Getting Started
+## Install & Run
+```
+npm install
+npm run start
+```
+Open http://localhost:3000
 
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-### `npm test`
-
-Launches the test runner in interactive watch mode.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-## Customization
-
-### Colors
-
-The main brand colors are defined as CSS variables in `src/App.css`:
-
-```css
-:root {
-  --kavia-orange: #E87A41;
-  --kavia-dark: #1A1A1A;
-  --text-color: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --border-color: rgba(255, 255, 255, 0.1);
-}
+Optional: Type checks
+```
+npm run typecheck
 ```
 
-### Components
+## Database Schema (SQL)
+Run in Supabase SQL editor:
 
-This template uses pure HTML/CSS components instead of a UI framework. You can find component styles in `src/App.css`. 
+```sql
+-- profiles
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  email text,
+  full_name text,
+  avatar_url text,
+  created_at timestamp with time zone default now()
+);
+alter table public.profiles enable row level security;
+create policy "Profiles are readable by authenticated" on public.profiles
+  for select using (auth.role() = 'authenticated');
+create policy "Users can update own profile" on public.profiles
+  for update using ( auth.uid() = id );
 
-Common components include:
-- Buttons (`.btn`, `.btn-large`)
-- Container (`.container`)
-- Navigation (`.navbar`)
-- Typography (`.title`, `.subtitle`, `.description`)
+-- columns
+create table if not exists public.columns (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  position int not null default 0,
+  created_at timestamp with time zone default now()
+);
+alter table public.columns enable row level security;
+create policy "Columns readable to authenticated" on public.columns
+  for select using (auth.role() = 'authenticated');
+create policy "Columns insert by authenticated" on public.columns
+  for insert with check (auth.role() = 'authenticated');
+create policy "Columns update by authenticated" on public.columns
+  for update using (auth.role() = 'authenticated');
 
-## Learn More
+-- tasks
+create table if not exists public.tasks (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  description text,
+  assignee_id uuid references public.profiles(id),
+  column_id uuid not null references public.columns(id) on delete cascade,
+  due_date timestamptz,
+  priority text not null default 'medium' check (priority in ('low','medium','high')),
+  position int not null default 0,
+  created_at timestamp with time zone default now()
+);
+alter table public.tasks enable row level security;
+create policy "Tasks readable to authenticated" on public.tasks
+  for select using (auth.role() = 'authenticated');
+create policy "Tasks insert by authenticated" on public.tasks
+  for insert with check (auth.role() = 'authenticated');
+create policy "Tasks update by authenticated" on public.tasks
+  for update using (auth.role() = 'authenticated');
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Realtime
+This app subscribes to Postgres changes on `columns` and `tasks` and refreshes the board when inserts/updates/deletes happen.
 
-### Code Splitting
+## Feature Flags / Seed Safety
+- If environment variables are missing, the app runs in a disabled state and shows a helpful message.
+- On first load with an empty board, default columns (`Backlog`, `In Progress`, `Done`) are inserted (idempotent).
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## Styling
+Ocean Professional minimalist theme via CSS variables:
+- primary #374151, secondary #9CA3AF
+- success #10B981, error #EF4444
+- background #FFFFFF, surface #F9FAFB, text #111827
 
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## Notes
+- Authentication uses email/password with Supabase session persistence.
+- Update `emailRedirectTo` behavior by deploying with your final domain (we default to current origin).
+- Ensure Realtime is enabled in your Supabase project.

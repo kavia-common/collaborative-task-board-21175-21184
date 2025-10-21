@@ -1,17 +1,29 @@
 {
-  "name": "react-kavia",
+  "name": "task-management-frontend",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@hello-pangea/dnd": "^16.5.0",
+    "@supabase/supabase-js": "^2.45.4",
+    "date-fns": "^3.6.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-scripts": "^5.0.1"
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
+    "ajv": "^8.17.1",
+    "ajv-keywords": "^5.1.0",
+    "cross-env": "^7.0.3",
+    "react-scripts": "^5.0.1",
+    "typescript": "^5.6.2"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "typecheck": "tsc --noEmit"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -27,8 +39,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "cross-env": "^7.0.3"
   }
 }
