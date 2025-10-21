@@ -14,7 +14,7 @@ export default function Board({
   onOpenTask: (task: Task) => void;
   onReload: () => void;
 }): JSX.Element {
-  /** Renders the board with columns and tasks and handles drag-and-drop movement. */
+  /** Enhanced board with polished layout, grouped columns, and smooth interactions. */
   const tasksByColumn = useMemo(() => {
     const m: Record<string, Task[]> = {};
     data.columns.forEach((c) => (m[c.id] = []));
@@ -37,26 +37,28 @@ export default function Board({
     if (toColumn === fromColumn && toIndex === fromIndex) return;
 
     try {
-      await moveTask(draggableId, toColumn, toIndex * 10); // spacing to allow inserts
+      await moveTask(draggableId, toColumn, toIndex * 10);
       await onReload();
     } catch (e) {
       // eslint-disable-next-line no-console
-      console.error(e);
+      console.error("[Board] Move task failed:", e);
     }
   };
 
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <div className="board">
-        {data.columns.map((c) => (
-          <Column
-            key={c.id}
-            column={c}
-            tasks={tasksByColumn[c.id] || []}
-            onOpenTask={onOpenTask}
-          />
-        ))}
-      </div>
-    </DragDropContext>
+    <div className="board-container">
+      <DragDropContext onDragEnd={onDragEnd}>
+        <div className="board-enhanced">
+          {data.columns.map((c) => (
+            <Column
+              key={c.id}
+              column={c}
+              tasks={tasksByColumn[c.id] || []}
+              onOpenTask={onOpenTask}
+            />
+          ))}
+        </div>
+      </DragDropContext>
+    </div>
   );
 }
